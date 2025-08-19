@@ -63,7 +63,7 @@ movies = {
     }
 }
 
-st.title("🎬 영화 & 드라마 추천 웹 앱")
+st.title("🎬 오늘의 무드 플레이리스트")
 
 # 입력 받기
 genre = st.selectbox("보고 싶은 장르를 선택하세요", list(movies.keys()))
