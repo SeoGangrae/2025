@@ -1,98 +1,356 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import streamlit as st
+import random
+import datetime
 
-export default function MovieRecommender() {
-  const [genre, setGenre] = useState("");
-  const [mood, setMood] = useState("");
-  const [recommendation, setRecommendation] = useState(null);
-  const [bgColor, setBgColor] = useState("bg-gray-100");
+st.set_page_config(page_title="오늘의 무드 플레이리스트", page_icon="🎬", layout="centered")
 
-  const movies = {
-    "공포": {
-      "스릴 넘치게": "컨저링 (The Conjuring)",
-      "무섭지만 재밌게": "겟 아웃 (Get Out)",
-      "긴장되게": "인시디어스 (Insidious)",
+# --- 장르별/기분별 작품 목록 (일부만 발췌) ---
+movies = {
+    "액션": {
+        "신남": ["어벤져스: 엔드게임", "미션 임파서블: 폴아웃", "분노의 질주"],
+        "설렘": ["킹스맨", "존 윅"],
+        "유쾌함": ["범죄도시", "베테랑"],
+        "감성": ["신세계", "매드맥스: 분노의 도로"],
+        "긴장": ["다크 나이트", "로건"],
+        "공포": ["블레이드 러너 2049"],
+        "우울": ["남한산성"]
+    },
+    "코미디": {
+        "신남": ["극한직업", "맨 인 블랙", "행오버"],
+        "설렘": ["쥬만지", "수상한 그녀"],
+        "유쾌함": ["7번방의 선물", "국제시장"],
+        "감성": ["웰컴 투 동막골"],
+        "긴장": ["맨 인 블랙"],
+        "공포": ["쥬만지"],
+        "우울": ["써니", "헬로우 고스트"]
+    },
+    "드라마": {
+        "신남": ["포레스트 검프", "굿 윌 헌팅"],
+        "설렘": ["라라랜드", "인생은 아름다워"],
+        "유쾌함": ["기생충"],
+        "감성": ["인터스텔라", "우리들의 블루스(드라마)", "응답하라 1988(드라마)"],
+        "긴장": ["레버넌트"],
+        "공포": ["레버넌트"],
+        "우울": ["죽은 시인의 사회", "쇼생크 탈출", "미나리"]
     },
     "로맨스": {
-      "설레게": "라라랜드 (La La Land)",
-      "따뜻하게": "어바웃 타임 (About Time)",
-      "잔잔하게": "비포 선라이즈 (Before Sunrise)",
+        "신남": ["타이타닉", "노트북"],
+        "설렘": ["어바웃 타임", "비포 선라이즈"],
+        "유쾌함": ["500일의 썸머", "건축학개론"],
+        "감성": ["지금, 만나러 갑니다", "너의 결혼식"],
+        "긴장": ["이터널 선샤인"],
+        "공포": ["브로크백 마운틴"],
+        "우울": ["결혼 이야기", "헤어질 결심", "시월애"]
     },
-    "액션": {
-      "통쾌하게": "존 윅 (John Wick)",
-      "화끈하게": "매드맥스: 분노의 도로 (Mad Max: Fury Road)",
-      "스릴 있게": "인셉션 (Inception)",
+    "SF/판타지": {
+        "신남": ["스타워즈: 깨어난 포스", "가디언즈 오브 갤럭시"],
+        "설렘": ["닥터 스트레인지", "아바타"],
+        "유쾌함": ["승리호", "듄"],
+        "감성": ["블레이드 러너 2049", "엑스 마키나"],
+        "긴장": ["인터스텔라"],
+        "공포": ["엑스 마키나"],
+        "우울": ["그래비티", "컨택트", "설국열차"]
     },
-  };
-
-  const bgThemes = {
-    "공포": "bg-red-900 text-white",
-    "로맨스": "bg-pink-200 text-black",
-    "액션": "bg-yellow-400 text-black",
-    "기본": "bg-gray-100 text-black",
-  };
-
-  const handleRecommend = () => {
-    if (genre && mood) {
-      setRecommendation(movies[genre][mood]);
-      setBgColor(bgThemes[genre] || bgThemes["기본"]);
+    "공포/스릴러": {
+        "신남": ["겟 아웃"],
+        "설렘": ["컨저링"],
+        "유쾌함": ["곡성"],
+        "감성": ["부산행"],
+        "긴장": ["그것", "미드소마", "스플릿"],
+        "공포": ["인시디어스", "컨저링"],
+        "우울": ["살인의 추억", "조커"]
     }
-  };
-
-  return (
-    <motion.div
-      className={`min-h-screen flex flex-col items-center justify-center transition-colors duration-700 ${bgColor}`}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <Card className="w-[400px] shadow-xl rounded-2xl p-6">
-        <CardContent className="flex flex-col gap-4">
-          <h1 className="text-xl font-bold text-center">🎬 영화 추천기</h1>
-
-          {/* 장르 선택 */}
-          <select
-            value={genre}
-            onChange={(e) => setGenre(e.target.value)}
-            className="border p-2 rounded-lg"
-          >
-            <option value="">장르 선택</option>
-            <option value="공포">공포</option>
-            <option value="로맨스">로맨스</option>
-            <option value="액션">액션</option>
-          </select>
-
-          {/* 기분 선택 */}
-          {genre && (
-            <select
-              value={mood}
-              onChange={(e) => setMood(e.target.value)}
-              className="border p-2 rounded-lg"
-            >
-              <option value="">기분 선택</option>
-              {Object.keys(movies[genre]).map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          )}
-
-          <Button onClick={handleRecommend} className="mt-2">추천받기</Button>
-
-          {/* 추천 결과 */}
-          {recommendation && (
-            <motion.div
-              className="mt-4 text-center text-lg font-semibold"
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              👉 오늘의 추천 영화: {recommendation}
-            </motion.div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
 }
+
+# --- 작품별 명대사 & 3줄 요약 (있는 것만 우선 채움) ---
+info = {
+    "어벤져스: 엔드게임": {
+        "quote": "“I love you 3000.”",
+        "syn": ["모든 것을 되돌리기 위한 마지막 작전",
+                "히어로들이 시간 여행으로 인피니티 스톤 회수 도전",
+                "희생과 팀워크의 완성으로 대서사 마무리"]
+    },
+    "미션 임파서블: 폴아웃": {
+        "quote": "“운도 실력의 일부지.”",
+        "syn": ["핵 위협을 막기 위한 시간과의 레이스",
+                "이단 헌트가 팀과 함께 전 세계 추격전",
+                "절벽·헬기·도심 액션의 정점"]
+    },
+    "분노의 질주": {
+        "quote": "“가족이 전부야.”",
+        "syn": ["스트리트 레이싱에서 시작된 패밀리 액션",
+                "스릴 넘치는 카체이싱과 팀플레이",
+                "의리와 배신 사이, 결국 남는 건 가족"]
+    },
+    "킹스맨": {
+        "quote": "“Manners maketh man.”",
+        "syn": ["영국 신사 스파이 조직의 비밀 미션",
+                "스타일리시한 액션과 유머",
+                "신입 요원의 성장 서사"]
+    },
+    "존 윅": {
+        "quote": "“사람들이 나를 왜 무서워했는지 보여줄 시간이지.”",
+        "syn": ["전설의 킬러가 복수를 위해 돌아오다",
+                "정교한 총격전과 근접 전투",
+                "룰로 움직이는 범죄 세계관"]
+    },
+    "매드맥스: 분노의 도로": {
+        "quote": "“불멸을 꿈꿔라.”",
+        "syn": ["사막을 가르는 광기의 추격전",
+                "퓨리오사와 맥스의 연합 탈출",
+                "폭발적 비주얼과 리듬감"]
+    },
+    "범죄도시": {
+        "quote": "“느그 서장은 어딨노?”",
+        "syn": ["강력반의 통쾌한 소탕 작전",
+                "마동석표 핵주먹 액션",
+                "현실감 넘치는 범죄 활극"]
+    },
+    "베테랑": {
+        "quote": "“우리가 돈이 없지 가오가 없냐.”",
+        "syn": ["재벌 2세 악행을 쫓는 강력반",
+                "사이다 전개와 코믹 버디무비 감성",
+                "정의감 폭발 액션 드라마"]
+    },
+    "신세계": {
+        "quote": "“너 나랑 일 하나 같이 하자.”",
+        "syn": ["경찰과 조직 사이 잠입 수사",
+                "판이 커질수록 흔들리는 믿음",
+                "비극으로 흘러가는 느와르"]
+    },
+    "다크 나이트": {
+        "quote": "“Why so serious?”",
+        "syn": ["조커의 혼돈이 고담을 뒤흔들다",
+                "영웅과 정의의 경계를 묻는 이야기",
+                "압도적 긴장감과 명연기"]
+    },
+    "로건": {
+        "quote": "“가족… 그게 뭔지 이제 알 것 같아.”",
+        "syn": ["지친 영웅의 마지막 여정",
+                "소녀를 지키기 위한 도주",
+                "잔혹하지만 따뜻한 이별"]
+    },
+    "블레이드 러너 2049": {
+        "quote": "“Tears in rain.”",
+        "syn": ["복제인간의 존재와 기억의 의미",
+                "황량한 미래 도시의 미스터리",
+                "정체성을 찾아가는 여정"]
+    },
+    "극한직업": {
+        "quote": "“지금까지 이런 맛은 없었다.”",
+        "syn": ["마약반의 잠입수사가 치킨집 대박",
+                "수사와 장사 사이에서 벌어지는 해프닝",
+                "한국식 코미디의 정수"]
+    },
+    "맨 인 블랙": {
+        "quote": "“세상은 우리가 지킨다.”",
+        "syn": ["지구의 외계인 비밀 조직",
+                "기발한 장비와 브로맨스",
+                "유쾌한 SF 코미디"]
+    },
+    "행오버": {
+        "quote": "“어제 무슨 일이 있었지?”",
+        "syn": ["기억이 사라진 채 시작되는 추적",
+                "라스베이거스의 대환장 밤",
+                "단서 모아 우정을 회복"]
+    },
+    "라라랜드": {
+        "quote": "“Here’s to the ones who dream.”",
+        "syn": ["꿈과 사랑 사이의 선택",
+                "재즈와 댄스 넘버로 그린 로맨스",
+                "달콤쌉싸름한 엔딩"]
+    },
+    "기생충": {
+        "quote": "“계획은 없으니까 실패도 없어.”",
+        "syn": ["두 가족의 계급 충돌",
+                "블랙코미디와 스릴러의 절묘한 결합",
+                "예상 못한 폭발적 전개"]
+    },
+    "인터스텔라": {
+        "quote": "“사랑은 시간을 초월한다.”",
+        "syn": ["인류 생존을 위한 우주 탐사",
+                "블랙홀과 시간 왜곡의 드라마",
+                "부녀의 약속이 이끄는 기적"]
+    },
+    "포레스트 검프": {
+        "quote": "“인생은 초콜릿 상자와 같아.”",
+        "syn": ["순수한 남자의 기적 같은 여정",
+                "우연과 선택이 만든 삶",
+                "따뜻한 위로와 유머"]
+    },
+    "굿 윌 헌팅": {
+        "quote": "“It’s not your fault.”",
+        "syn": ["천재 청년과 상담가의 만남",
+                "상처와 화해, 성장의 시간",
+                "진짜 자신을 마주하다"]
+    },
+    "타이타닉": {
+        "quote": "“You jump, I jump.”",
+        "syn": ["거대한 비극 속 싹튼 사랑",
+                "계급을 넘는 두 사람의 선택",
+                "바다 위 영원한 약속"]
+    },
+    "어바웃 타임": {
+        "quote": "“평범한 오늘을 사랑하자.”",
+        "syn": ["시간을 되감는 능력을 가진 청년",
+                "사랑과 가족을 향한 두 번째 기회",
+                "작은 날들의 소중함"]
+    },
+    "500일의 썸머": {
+        "quote": "“This is not a love story.”",
+        "syn": ["관계의 시작과 끝을 다른 시점으로",
+                "로맨스의 환상과 현실",
+                "성장으로 마무리되는 청춘담"]
+    },
+    "건축학개론": {
+        "quote": "“그때 그 시절, 첫사랑.”",
+        "syn": ["스무 살의 기억과 현재가 교차",
+                "첫사랑의 설렘과 아쉬움",
+                "집을 짓듯 마음을 짓다"]
+    },
+    "지금, 만나러 갑니다": {
+        "quote": "“비 오는 날 다시 올게.”",
+        "syn": ["세상을 떠난 아내가 돌아오다",
+                "기억을 잃은 채 다시 시작하는 사랑",
+                "눈물과 위로의 판타지"]
+    },
+    "가디언즈 오브 갤럭시": {
+        "quote": "“우린 가디언즈다.”",
+        "syn": ["우주 말썽꾼들의 팀업",
+                "유쾌한 음악과 입담 액션",
+                "가족이 되어가는 과정"]
+    },
+    "닥터 스트레인지": {
+        "quote": "“가능성은 무한하다.”",
+        "syn": ["손상된 의사, 마법의 길로",
+                "차원과 시간의 시각적 향연",
+                "자아를 내려놓는 배우기"]
+    },
+    "아바타": {
+        "quote": "“I see you.”",
+        "syn": ["판도라에서 만난 다른 세계",
+                "자연과 문명의 충돌",
+                "공감이 만든 선택"]
+    },
+    "승리호": {
+        "quote": "“우리답게 벌고 우리답게 살자.”",
+        "syn": ["우주 청소부들의 한탕",
+                "인공지능 소녀를 둘러싼 음모",
+                "팀워크로 맞서는 대기업"]
+    },
+    "듄": {
+        "quote": "“공포는 마음을 죽인다.”",
+        "syn": ["사막 행성의 권력 전쟁",
+                "선택받은 자의 예언과 각성",
+                "거대한 서사의 서막"]
+    },
+    "겟 아웃": {
+        "quote": "“Get out!”",
+        "syn": ["연인의 가족 방문이 악몽으로",
+                "불편함이 공포로 뒤집히는 순간",
+                "사회적 은유가 날카롭게 파고든다"]
+    },
+    "컨저링": {
+        "quote": "“우리가 도와줄게요.”",
+        "syn": ["실화 바탕 악령 조사",
+                "클래식한 점층 공포",
+                "가족을 지키는 구마의식"]
+    },
+    "곡성": {
+        "quote": "“외지인은 누구인가.”",
+        "syn": ["의문의 연쇄 사건과 의심",
+                "믿음과 공포 사이의 심리전",
+                "해석을 부르는 결말"]
+    },
+    "부산행": {
+        "quote": "“가족을 지키기 위한 질주.”",
+        "syn": ["급행열차에 퍼진 재난",
+                "이기심과 희생의 대조",
+                "질주 속 눈물의 드라마"]
+    },
+    "조커": {
+        "quote": "“Put on a happy face.”",
+        "syn": ["웃는 가면 뒤의 절규",
+                "사회가 만든 괴물의 탄생",
+                "불편함을 마주하게 하는 영화"]
+    },
+    "살인의 추억": {
+        "quote": "“밝히지 못한 진실.”",
+        "syn": ["시골 마을 연쇄 사건 수사",
+                "무력감과 집착의 기록",
+                "한국 범죄극의 분기점"]
+    }
+}
+
+# --- 기분별 배경 색상 ---
+mood_bg = {
+    "신남": "#FFF700",      # 노랑
+    "설렘": "#FF69B4",      # 핑크
+    "유쾌함": "#FFA500",    # 주황
+    "감성": "#1E90FF",      # 파랑
+    "긴장": "#800080",      # 보라
+    "공포": "#8B0000",      # 짙은 빨강
+    "우울": "#A9A9A9"       # 회색
+}
+
+st.title("오늘의 무드 플레이리스트")
+
+# --- 입력 UI ---
+col1, col2 = st.columns(2)
+with col1:
+    genre = st.selectbox("🎬 장르", list(movies.keys()))
+with col2:
+    mood = st.selectbox("😊 현재 기분", ["신남", "설렘", "유쾌함", "감성", "긴장", "공포", "우울"])
+
+# --- 추천 로직 ---
+if st.button("추천받기"):
+    candidates = movies[genre].get(mood, [])
+    if not candidates:
+        st.warning("선택하신 조합은 아직 준비 중이에요. 다른 기분을 선택해 보세요!")
+    else:
+        # 정보가 있는 작품을 우선적으로 뽑기
+        with_info = [m for m in candidates if m in info]
+        pool = with_info if with_info else candidates
+        title = random.choice(pool)
+
+        # 배경색 변경
+        st.markdown(
+            f"""
+            <style>
+            .stApp {{
+                background-color: {mood_bg.get(mood, "#FFFFFF")};
+                transition: background-color 0.6s ease;
+            }}
+            </style>
+            """, unsafe_allow_html=True
+        )
+
+        st.success(f"오늘의 추천 작품: **{title}**")
+
+        # 명대사 & 요약
+        if title in info:
+            st.subheader("🎞️ 명대사")
+            st.write(info[title]["quote"])
+            st.subheader("📘 3줄 요약")
+            for line in info[title]["syn"]:
+                st.write(f"- {line}")
+        else:
+            st.info("해당 작품의 명대사/요약은 준비 중이에요!")
+
+# --- 오늘의 추천 (날짜 고정) ---
+all_titles = []
+for g in movies.values():
+    for lst in g.values():
+        all_titles.extend(lst)
+
+today = datetime.date.today()
+random.seed(today.toordinal())
+daily_pick = random.choice(all_titles)
+
+st.divider()
+st.caption(f"📅 오늘({today})의 고정 추천")
+st.write(f"🎬 **{daily_pick}**")
+if daily_pick in info:
+    st.caption("한 줄 대사")
+    st.write(f"“{info[daily_pick]['quote']}”")
 
