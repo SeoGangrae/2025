@@ -387,15 +387,31 @@ with col1:
 with col2:
     mood = st.selectbox("😊 현재 기분", list(mood_bg.keys()))
 
-# --- 추천 로직 ---
+import random  # random 모듈 import 필수
+
+# 추천 로직
 if st.button("추천받기"):
-    candidates = movies[genre].get(mood, [])
+    # genre, mood가 이미 선택되었다고 가정
+    candidates = movies.get(genre, {}).get(mood, [])
+    
     if not candidates:
         st.warning("선택하신 조합은 아직 준비 중이에요. 다른 기분을 선택해 보세요!")
     else:
-        with_info = [m for m in candidates if m in info]
+        # info 대신 movie_info 사용
+        with_info = [m for m in candidates if m in movie_info]
         pool = with_info if with_info else candidates
         title = random.choice(pool)
+
+        st.write(f"🎬 추천 영화: **{title}**")
+        
+        # 명대사 및 3줄 요약 출력
+        if title in movie_info:
+            st.caption("한 줄 대사")
+            st.write(f"“{movie_info[title]['quote']}”")
+            st.caption("3줄 요약")
+            for line in movie_info[title]['syn']:
+                st.write(f"- {line}")
+
 
         # 배경색 & 글씨 크기 CSS 적용
         st.markdown(
