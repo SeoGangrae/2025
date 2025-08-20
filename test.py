@@ -387,33 +387,21 @@ with col1:
 with col2:
     mood = st.selectbox("😊 현재 기분", list(mood_bg.keys()))
 
-import random  # random 모듈 import 필수
 
 # 추천 로직
 if st.button("추천받기"):
-    # genre, mood가 이미 선택되었다고 가정
     candidates = movies.get(genre, {}).get(mood, [])
     
     if not candidates:
-        st.warning("선택하신 조합은 아직 준비 중이에요. 다른 기분을 선택해 보세요!")
+        st.warning("선택하신 조합은 아직 준비 중이에요! 다른 기분을 선택해 보세요.")
     else:
-        # info 대신 movie_info 사용
-        with_info = [m for m in candidates if m in movie_info]
-        pool = with_info if with_info else candidates
+        pool = [m for m in candidates if m in movie_info] or candidates
         title = random.choice(pool)
 
         st.write(f"🎬 추천 영화: **{title}**")
-        
-        # 명대사 및 3줄 요약 출력
-        if title in movie_info:
-            st.caption("한 줄 대사")
-            st.write(f"“{movie_info[title]['quote']}”")
-            st.caption("3줄 요약")
-            for line in movie_info[title]['syn']:
-                st.write(f"- {line}")
 
 
-        # 배경색 & 글씨 크기 CSS 적용
+        # 배경색 적용
         st.markdown(
             f"""
             <style>
@@ -438,30 +426,27 @@ if st.button("추천받기"):
 
         st.markdown(f"<div class='big-title'>오늘의 추천 작품: {title}</div>", unsafe_allow_html=True)
 
-        if title in info:
-            st.markdown("<div class='quote'>🎞️ 명대사: " + info[title]["quote"] + "</div>", unsafe_allow_html=True)
+        if title in movie_info:
+            st.markdown(f"<div class='quote'>🎞️ 명대사: {movie_info[title]['quote']}</div>", unsafe_allow_html=True)
             st.markdown("<div class='synopsis'>📘 3줄 요약</div>", unsafe_allow_html=True)
-            for line in info[title]["syn"]:
+            for line in movie_info[title]["syn"]:
                 st.markdown(f"<div class='synopsis'>- {line}</div>", unsafe_allow_html=True)
         else:
             st.info("해당 작품의 명대사/요약은 준비 중이에요!")
 
 # --- 오늘의 추천 (날짜 고정) ---
-all_titles = []
-for g in movies.values():
-    for lst in g.values():
-        all_titles.extend(lst)
-
+all_titles = [title for g in movies.values() for lst in g.values() for title in lst]
 today = datetime.date.today()
 random.seed(today.toordinal())
 daily_pick = random.choice(all_titles)
 
-# info 대신 movie_info 사용
 st.divider()
 st.caption(f"📅 오늘({today})의 고정 추천")
 st.write(f"🎬 **{daily_pick}**")
 
-if daily_pick in movie_info:  # info -> movie_info
+if daily_pick in movie_info:
     st.caption("한 줄 대사")
-    st.write(f"“{movie_info[daily_pick]['quote']}”")  # info -> movie_info
-
+    st.write(f"“{movie_info[daily_pick]['quote']}”")
+    st.caption("3줄 요약")
+    for line in movie_info[daily_pick]["syn"]:
+        st.write(f"- {line}")
