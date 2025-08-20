@@ -440,9 +440,12 @@ today = datetime.date.today()
 random.seed(today.toordinal())
 daily_pick = random.choice(all_titles)
 
+# info 대신 movie_info 사용
 st.divider()
 st.caption(f"📅 오늘({today})의 고정 추천")
 st.write(f"🎬 **{daily_pick}**")
-if daily_pick in info:
+
+if daily_pick in movie_info:  # info -> movie_info
     st.caption("한 줄 대사")
-    st.write(f"“{info[daily_pick]['quote']}”")
+    st.write(f"“{movie_info[daily_pick]['quote']}”")  # info -> movie_info
+
